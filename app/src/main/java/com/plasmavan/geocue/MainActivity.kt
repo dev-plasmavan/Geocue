@@ -1,11 +1,16 @@
 package com.plasmavan.geocue
 
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -13,10 +18,14 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import com.plasmavan.geocue.ui.theme.GeocueTheme
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -36,17 +45,6 @@ class MainActivity : ComponentActivity() {
             Log.e("Error", "$e")
         }
 
-        val touristList: ArrayList<TouristData> = arrayListOf()
-        try {
-            val csvFile = resources.assets.open("tourist.csv")
-            val fileReader = BufferedReader(InputStreamReader(csvFile))
-            fileReader.forEachLine {
-
-            }
-        } catch (e: Exception) {
-            Log.e("Error", "$e")
-        }
-
         setContent {
             GeocueTheme {
                 Surface(
@@ -59,7 +57,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
     @Composable
     private fun HomeBase(options: ArrayList<String>) {
         var searchText by rememberSaveable { mutableStateOf("") }
@@ -130,6 +128,48 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+
+            val pagerState = rememberPagerState(pageCount = {
+                10
+            })
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .padding(16.dp)
+            ) { page ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.TopStart
+                ) {
+                    Column {
+                        Image(
+                            painterResource(id = R.drawable.ic_launcher_background),
+                            contentDescription = "Android logo",
+                            contentScale = ContentScale.FillWidth
+                        )
+                        Text(
+                            text = "Page: $page",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.BottomStart
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+
+                    }
+                }
+            }
         }
 
         Box(
@@ -143,7 +183,7 @@ class MainActivity : ComponentActivity() {
                 containerColor = MaterialTheme.colorScheme.background
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Add,
+                    imageVector = Icons.Filled.Favorite,
                     contentDescription = "お気に入りを追加"
                 )
             }
