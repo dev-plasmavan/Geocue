@@ -9,8 +9,10 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -60,9 +62,11 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
     @Composable
     private fun HomeBase(options: ArrayList<String>) {
+        val itemsList = List(20) { "Item #$it" }
         var searchText by rememberSaveable { mutableStateOf("") }
         var menuText by remember { mutableStateOf(options[12]) }
         var expanded by remember { mutableStateOf(false) }
+        val filteredItems by remember { derivedStateOf { itemsList.filter { it.contains(searchText, ignoreCase = true) } } }
 
         Column {
             Box(
@@ -85,7 +89,7 @@ class MainActivity : ComponentActivity() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                contentAlignment = Alignment.TopCenter
+                contentAlignment = Alignment.TopStart
             ) {
                 Row {
                     ExposedDropdownMenuBox(
@@ -118,55 +122,40 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
-
-                    Icon(
-                        imageVector = Icons.Filled.Check,
-                        contentDescription = "Nothing",
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth()
-                    )
                 }
             }
 
-            val pagerState = rememberPagerState(pageCount = {
-                10
-            })
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier
-                    .padding(16.dp)
-            ) { page ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.TopStart
-                ) {
-                    Column {
-                        Image(
-                            painterResource(id = R.drawable.ic_launcher_background),
-                            contentDescription = "Android logo",
-                            contentScale = ContentScale.FillWidth
-                        )
-                        Text(
-                            text = "Page: $page",
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp)
-                        )
-                    }
-                }
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.BottomStart
-                ) {
+            LazyColumn {
+                items(filteredItems) { item ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp)
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-
+                        Text(
+                            text = item,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Row {
+                            IconButton(
+                                onClick = {}
+                            ) {
+                                Icon(
+                                    Icons.Filled.Info,
+                                    contentDescription = "Edit"
+                                )
+                            }
+                            IconButton(
+                                onClick = {}
+                            ) {
+                                Icon(
+                                    Icons.Filled.LocationOn,
+                                    contentDescription = "Delete"
+                                )
+                            }
+                        }
                     }
                 }
             }
