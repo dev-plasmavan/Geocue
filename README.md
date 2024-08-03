@@ -16,8 +16,8 @@
 > - Android Studio Koala (2024.1.1) and Higher, 
 > - If you use Intellij IDEA, you will also need the following plug-ins You will also need to install the Android SDK.
 >   - Intellij IDEA 2024.1 and Higher.
->   - [Android]: https://plugins.jetbrains.com/plugin/22989-android
->   - [Android Design Tools]: https://plugins.jetbrains.com/plugin/22990-android-design-tools
+>   - Android : https://plugins.jetbrains.com/plugin/22989-android
+>   - Android Design Tools : https://plugins.jetbrains.com/plugin/22990-android-design-tools
 
 1. First, clone this repository locally using git.
 
