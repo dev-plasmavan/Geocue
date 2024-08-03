@@ -12,7 +12,7 @@
 > [!IMPORTANT]
 > You will need a development environment that includes the following tools to build this project
 > - Android Studio Koala (2024.1.1) and Higher.
-> - If you use Intellij IDEA, you will also need the following plug-ins You will also need to install the Android SDK.
+> - If you use Intellij IDEA, you will also need the following plug-ins and also need to install the Android SDK.
 >   - Intellij IDEA 2024.1 and Higher.
 >   - Android : https://plugins.jetbrains.com/plugin/22989-android
 >   - Android Design Tools : https://plugins.jetbrains.com/plugin/22990-android-design-tools
