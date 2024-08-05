@@ -1,7 +1,7 @@
 package com.plasmavan.geocue
 
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -10,9 +10,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -20,15 +17,19 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
 import com.plasmavan.geocue.ui.theme.GeocueTheme
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.gotrue.Auth
+import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.serializer.KotlinXSerializer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -47,13 +48,24 @@ class MainActivity : ComponentActivity() {
             Log.e("Error", "$e")
         }
 
+        val supabase = createSupabaseClient(
+            supabaseUrl = BuildConfig.supabaseUrl,
+            supabaseKey = BuildConfig.supabaseKey
+        ) {
+            defaultSerializer = KotlinXSerializer(Json)
+            install(Auth)
+            install(Postgrest) {
+                defaultSchema = "api"
+            }
+        }
+
         setContent {
             GeocueTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    HomeBase(prefecturesList)
+                    HomeBase(prefecturesList, supabase)
                 }
             }
         }
@@ -61,12 +73,20 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
     @Composable
-    private fun HomeBase(options: ArrayList<String>) {
-        val itemsList = List(20) { "Item #$it" }
+    private fun HomeBase(options: ArrayList<String>, supabase: SupabaseClient) {
         var searchText by rememberSaveable { mutableStateOf("") }
         var menuText by remember { mutableStateOf(options[12]) }
         var expanded by remember { mutableStateOf(false) }
-        val filteredItems by remember { derivedStateOf { itemsList.filter { it.contains(searchText, ignoreCase = true) } } }
+        var geoItems by remember { mutableStateOf<List<GeoData>>(listOf()) }
+
+        LaunchedEffect(Unit) {
+            withContext(Dispatchers.IO) {
+                geoItems = supabase.from("geographic")
+                    .select().decodeList<GeoData>()
+            }
+        }
+        
+        val filteredItems by remember { derivedStateOf { geoItems.filter { it.name.contains(searchText, ignoreCase = true) } } }
 
         Column {
             Box(
@@ -126,7 +146,10 @@ class MainActivity : ComponentActivity() {
             }
 
             LazyColumn {
-                items(filteredItems) { item ->
+                items(
+                    filteredItems,
+                    key = { item -> item.id },
+                ) { item ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -135,12 +158,15 @@ class MainActivity : ComponentActivity() {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = item,
+                            text = item.name,
                             modifier = Modifier.weight(1f)
                         )
                         Row {
                             IconButton(
-                                onClick = {}
+                                onClick = {
+                                    val uri = Uri.parse(item.url)
+                                    startActivity(Intent(Intent.ACTION_VIEW, uri))
+                                }
                             ) {
                                 Icon(
                                     Icons.Filled.Info,
@@ -148,7 +174,12 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             IconButton(
-                                onClick = {}
+                                onClick = {
+                                    val gmmIntentUri = Uri.parse("google.streetview:cbll=${item.map}")
+                                    val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+                                    mapIntent.setPackage("com.google.android.apps.maps")
+                                    startActivity(mapIntent)
+                                }
                             ) {
                                 Icon(
                                     Icons.Filled.LocationOn,
@@ -161,21 +192,21 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp),
-            contentAlignment = Alignment.BottomEnd
-        ) {
-            FloatingActionButton(
-                onClick = {},
-                containerColor = MaterialTheme.colorScheme.background
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Favorite,
-                    contentDescription = "お気に入りを追加"
-                )
-            }
-        }
+//        Box(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(32.dp),
+//            contentAlignment = Alignment.BottomEnd
+//        ) {
+//            FloatingActionButton(
+//                onClick = {},
+//                containerColor = MaterialTheme.colorScheme.background
+//            ) {
+//                Icon(
+//                    imageVector = Icons.Filled.Favorite,
+//                    contentDescription = "お気に入りを追加"
+//                )
+//            }
+//        }
     }
 }
