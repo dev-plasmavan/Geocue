@@ -85,7 +85,7 @@ class MainActivity : ComponentActivity() {
                     .select().decodeList<GeoData>()
             }
         }
-        
+
         val filteredItems by remember { derivedStateOf { geoItems.filter { it.name.contains(searchText, ignoreCase = true) } } }
 
         Column {
@@ -164,8 +164,14 @@ class MainActivity : ComponentActivity() {
                         Row {
                             IconButton(
                                 onClick = {
-                                    val uri = Uri.parse(item.url)
-                                    startActivity(Intent(Intent.ACTION_VIEW, uri))
+//                                    val uri = Uri.parse(item.url)
+//                                    startActivity(Intent(Intent.ACTION_VIEW, uri))
+
+                                    val intent = Intent(applicationContext, GeographicalActivity::class.java)
+                                    intent.putExtra("selectedUrl", item.url)
+                                    intent.putExtra("selectedName", item.name)
+
+                                    startActivity(intent)
                                 }
                             ) {
                                 Icon(
