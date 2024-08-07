@@ -26,7 +26,7 @@
             </intent-filter>
         </activity>
         <activity
-                android:name=".GeographicalActivity"
+                android:name=".WebViewActivity"
                 android:exported="true"
                 android:theme="@style/Theme.Geocue">
         </activity>

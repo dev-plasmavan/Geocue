@@ -7,5 +7,6 @@ data class GeoData(
     val id: Int,
     val name: String,
     val url: String,
-    val map: String
+    val map: String,
+    val prefecture: String
 )

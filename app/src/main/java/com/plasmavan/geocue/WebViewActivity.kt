@@ -1,29 +1,32 @@
 package com.plasmavan.geocue
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.net.http.SslError
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
+import android.webkit.SslErrorHandler
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.plasmavan.geocue.ui.theme.GeocueTheme
 
-class GeographicalActivity : ComponentActivity() {
+class WebViewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -69,6 +72,20 @@ class GeographicalActivity : ComponentActivity() {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    IconButton(
+                        onClick = {
+                            finish()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                            contentDescription = null
+                        )
+                    }
+                    Spacer(
+                        modifier = Modifier
+                            .width(16.dp)
+                    )
                     Card(
                         modifier = Modifier
                             .weight(1f),
@@ -114,7 +131,8 @@ class GeographicalActivity : ComponentActivity() {
                 if (isLoading) {
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
                         webView?.visibility = View.INVISIBLE
                         CircularProgressIndicator(
@@ -141,6 +159,16 @@ class GeographicalActivity : ComponentActivity() {
                                     super.onPageFinished(view, url)
                                     isLoading = false
                                     webView?.visibility = View.VISIBLE
+                                }
+
+                                @SuppressLint("WebViewClientOnReceivedSslError")
+                                override fun onReceivedSslError(
+                                    view: WebView?,
+                                    handler: SslErrorHandler?,
+                                    error: SslError?
+                                ) {
+                                    handler?.proceed()
+                                    super.onReceivedSslError(view, handler, error)
                                 }
 
                                 override fun shouldOverrideUrlLoading(

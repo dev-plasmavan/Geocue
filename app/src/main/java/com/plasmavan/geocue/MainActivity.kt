@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,9 +24,7 @@ import io.github.jan.supabase.gotrue.Auth
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.serializer.KotlinXSerializer
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.io.BufferedReader
@@ -71,7 +68,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun HomeBase(options: ArrayList<String>, supabase: SupabaseClient) {
         var searchText by rememberSaveable { mutableStateOf("") }
@@ -86,7 +83,8 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        val filteredItems by remember { derivedStateOf { geoItems.filter { it.name.contains(searchText, ignoreCase = true) } } }
+        val filteredPrefectures by remember { derivedStateOf { geoItems.filter { it.prefecture.contains(menuText, ignoreCase = true) } } }
+        val filteredItems by remember { derivedStateOf { filteredPrefectures.filter { it.name.contains(searchText, ignoreCase = true) } } }
 
         Column {
             Box(
@@ -167,7 +165,7 @@ class MainActivity : ComponentActivity() {
 //                                    val uri = Uri.parse(item.url)
 //                                    startActivity(Intent(Intent.ACTION_VIEW, uri))
 
-                                    val intent = Intent(applicationContext, GeographicalActivity::class.java)
+                                    val intent = Intent(applicationContext, WebViewActivity::class.java)
                                     intent.putExtra("selectedUrl", item.url)
                                     intent.putExtra("selectedName", item.name)
 
