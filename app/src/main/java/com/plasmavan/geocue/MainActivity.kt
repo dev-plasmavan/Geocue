@@ -179,10 +179,17 @@ class MainActivity : ComponentActivity() {
                             }
                             IconButton(
                                 onClick = {
-                                    val gmmIntentUri = Uri.parse("google.streetview:cbll=${item.map}")
-                                    val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
-                                    mapIntent.setPackage("com.google.android.apps.maps")
-                                    startActivity(mapIntent)
+                                    val trimItem: String = item.map.replace(" ", "")
+                                    val splitList: List<String> = trimItem.split(",")
+
+                                    val latitude: String = splitList[0]
+                                    val longitude: String = splitList[1]
+
+                                    val uri = Uri.parse("geo:$latitude,$longitude?q=$latitude,$longitude")
+                                    val intent = Intent(Intent.ACTION_VIEW, uri)
+                                    intent.setPackage("com.google.android.apps.maps")
+
+                                    startActivity(intent)
                                 }
                             ) {
                                 Icon(

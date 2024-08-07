@@ -15,6 +15,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -39,7 +40,7 @@ class WebViewActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    GeographicalUI(url, name)
+                    WebViewUI(url, name)
                 }
             }
         }
@@ -54,8 +55,9 @@ class WebViewActivity : ComponentActivity() {
         }
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     @Composable
-    private fun GeographicalUI(url: String, name: String) {
+    private fun WebViewUI(url: String, name: String) {
         var webView by remember { mutableStateOf<WebView?>(null) }
         var isLoading by remember { mutableStateOf(true) }
 
@@ -72,20 +74,6 @@ class WebViewActivity : ComponentActivity() {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    IconButton(
-                        onClick = {
-                            finish()
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                            contentDescription = null
-                        )
-                    }
-                    Spacer(
-                        modifier = Modifier
-                            .width(16.dp)
-                    )
                     Card(
                         modifier = Modifier
                             .weight(1f),
@@ -109,6 +97,26 @@ class WebViewActivity : ComponentActivity() {
                         modifier = Modifier
                             .width(16.dp)
                     )
+                    IconButton(
+                        onClick = {
+                            webView?.goBack()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                            contentDescription = null
+                        )
+                    }
+                    IconButton(
+                        onClick = {
+                            webView?.goForward()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null
+                        )
+                    }
                     IconButton(
                         onClick = {
                             webView?.reload()
@@ -148,6 +156,7 @@ class WebViewActivity : ComponentActivity() {
                         .fillMaxSize(),
                     factory = {
                         WebView(it).apply {
+                            settings.javaScriptEnabled = true
                             webViewClient = object : WebViewClient() {
                                 override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                                     super.onPageStarted(view, url, favicon)
@@ -159,16 +168,6 @@ class WebViewActivity : ComponentActivity() {
                                     super.onPageFinished(view, url)
                                     isLoading = false
                                     webView?.visibility = View.VISIBLE
-                                }
-
-                                @SuppressLint("WebViewClientOnReceivedSslError")
-                                override fun onReceivedSslError(
-                                    view: WebView?,
-                                    handler: SslErrorHandler?,
-                                    error: SslError?
-                                ) {
-                                    handler?.proceed()
-                                    super.onReceivedSslError(view, handler, error)
                                 }
 
                                 override fun shouldOverrideUrlLoading(
