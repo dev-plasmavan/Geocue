@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Geocue</string>
+    <string name="app_settings">設定</string>
+    <string name="tourist_attraction_name">観光地名</string>
+    <string name="tourist_attraction_name_example">例）東京ドームシティ</string>
+    <string name="prefectures_of_japan">都道府県</string>
+    <string name="language_selection">このアプリの表示に使いたい言語</string>
+    <string name="japanese">日本語</string>
+    <string name="english">英語（English）</string>
+    <string name="changed_language">アプリの言語が日本語に切り替わりました。</string>
 </resources>

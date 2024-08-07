@@ -26,6 +26,11 @@
             </intent-filter>
         </activity>
         <activity
+                android:name=".SettingsActivity"
+                android:exported="true"
+                android:theme="@style/Theme.Geocue">
+        </activity>
+        <activity
                 android:name=".WebViewActivity"
                 android:exported="true"
                 android:theme="@style/Theme.Geocue">

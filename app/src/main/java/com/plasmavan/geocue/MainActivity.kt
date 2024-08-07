@@ -89,6 +89,37 @@ class MainActivity : ComponentActivity() {
         Column {
             Box(
                 modifier = Modifier
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                    title = {
+                        Text(
+                            text = getString(R.string.app_name)
+                        )
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = {
+                                val intent = Intent(applicationContext, SettingsActivity::class.java)
+                                startActivity(intent)
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Settings,
+                                contentDescription = null
+                            )
+                        }
+                    }
+                )
+            }
+
+            Box(
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 contentAlignment = Alignment.TopCenter
@@ -98,8 +129,8 @@ class MainActivity : ComponentActivity() {
                         .fillMaxWidth(),
                     value = searchText,
                     onValueChange = { searchText = it },
-                    label = { Text( text = "観光地名" ) },
-                    placeholder = { Text( text = "例）東京ドームシティ")}
+                    label = { Text( text = getString(R.string.tourist_attraction_name) ) },
+                    placeholder = { Text( text = getString(R.string.tourist_attraction_name_example))}
                 )
             }
 
@@ -120,7 +151,7 @@ class MainActivity : ComponentActivity() {
                             onValueChange = {},
                             readOnly = true,
                             singleLine = true,
-                            label = { Text("都道府県") },
+                            label = { Text( text = getString(R.string.prefectures_of_japan)) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             colors = ExposedDropdownMenuDefaults.textFieldColors(),
                         )
