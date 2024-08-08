@@ -1,6 +1,9 @@
 package com.plasmavan.geocue
 
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -16,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.plasmavan.geocue.ui.theme.GeocueTheme
 import io.github.jan.supabase.SupabaseClient
@@ -29,10 +33,16 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val language = prefs.getString("app_language", "en") ?: "en"
+
+        setLocale(language)
 
         val prefecturesList: ArrayList<String> = arrayListOf()
         try {
@@ -75,16 +85,36 @@ class MainActivity : ComponentActivity() {
         var menuText by remember { mutableStateOf(options[12]) }
         var expanded by remember { mutableStateOf(false) }
         var geoItems by remember { mutableStateOf<List<GeoData>>(listOf()) }
+        var isLoading by remember { mutableStateOf(true) }
 
         LaunchedEffect(Unit) {
             withContext(Dispatchers.IO) {
                 geoItems = supabase.from("geographic")
                     .select().decodeList<GeoData>()
+                isLoading = false
             }
         }
 
-        val filteredPrefectures by remember { derivedStateOf { geoItems.filter { it.prefecture.contains(menuText, ignoreCase = true) } } }
-        val filteredItems by remember { derivedStateOf { filteredPrefectures.filter { it.name.contains(searchText, ignoreCase = true) } } }
+        val filteredPrefectures by remember {
+            derivedStateOf {
+                geoItems.filter {
+                    it.prefecture.contains(
+                        menuText,
+                        ignoreCase = true
+                    )
+                }
+            }
+        }
+        val filteredItems by remember {
+            derivedStateOf {
+                filteredPrefectures.filter {
+                    it.name.contains(
+                        searchText,
+                        ignoreCase = true
+                    )
+                }
+            }
+        }
 
         Column {
             Box(
@@ -105,7 +135,8 @@ class MainActivity : ComponentActivity() {
                     actions = {
                         IconButton(
                             onClick = {
-                                val intent = Intent(applicationContext, SettingsActivity::class.java)
+                                val intent =
+                                    Intent(applicationContext, SettingsActivity::class.java)
                                 startActivity(intent)
                             }
                         ) {
@@ -129,8 +160,8 @@ class MainActivity : ComponentActivity() {
                         .fillMaxWidth(),
                     value = searchText,
                     onValueChange = { searchText = it },
-                    label = { Text( text = getString(R.string.tourist_attraction_name) ) },
-                    placeholder = { Text( text = getString(R.string.tourist_attraction_name_example))}
+                    label = { Text(text = getString(R.string.tourist_attraction_name)) },
+                    placeholder = { Text(text = getString(R.string.tourist_attraction_name_example)) }
                 )
             }
 
@@ -151,7 +182,7 @@ class MainActivity : ComponentActivity() {
                             onValueChange = {},
                             readOnly = true,
                             singleLine = true,
-                            label = { Text( text = getString(R.string.prefectures_of_japan)) },
+                            label = { Text(text = getString(R.string.prefectures_of_japan)) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             colors = ExposedDropdownMenuDefaults.textFieldColors(),
                         )
@@ -161,7 +192,12 @@ class MainActivity : ComponentActivity() {
                         ) {
                             options.forEach { option ->
                                 DropdownMenuItem(
-                                    text = { Text(option, style = MaterialTheme.typography.bodyLarge) },
+                                    text = {
+                                        Text(
+                                            option,
+                                            style = MaterialTheme.typography.bodyLarge
+                                        )
+                                    },
                                     onClick = {
                                         menuText = option
                                         expanded = false
@@ -174,81 +210,104 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            LazyColumn {
-                items(
-                    filteredItems,
-                    key = { item -> item.id },
-                ) { item ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
+            if(isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column {
                         Text(
-                            text = item.name,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            text = getString(R.string.loading_now),
+                            textAlign = TextAlign.Center
                         )
-                        Row {
-                            IconButton(
-                                onClick = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier,
+                                color = MaterialTheme.colorScheme.secondary,
+                                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                            )
+                        }
+                    }
+                }
+            } else {
+                LazyColumn {
+                    items(
+                        filteredItems,
+                        key = { item -> item.id },
+                    ) { item ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = item.name,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Row {
+                                IconButton(
+                                    onClick = {
 //                                    val uri = Uri.parse(item.url)
 //                                    startActivity(Intent(Intent.ACTION_VIEW, uri))
 
-                                    val intent = Intent(applicationContext, WebViewActivity::class.java)
-                                    intent.putExtra("selectedUrl", item.url)
-                                    intent.putExtra("selectedName", item.name)
+                                        val intent =
+                                            Intent(applicationContext, WebViewActivity::class.java)
+                                        intent.putExtra("selectedUrl", item.url)
+                                        intent.putExtra("selectedName", item.name)
 
-                                    startActivity(intent)
+                                        startActivity(intent)
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Filled.Info,
+                                        contentDescription = "Edit"
+                                    )
                                 }
-                            ) {
-                                Icon(
-                                    Icons.Filled.Info,
-                                    contentDescription = "Edit"
-                                )
-                            }
-                            IconButton(
-                                onClick = {
-                                    val trimItem: String = item.map.replace(" ", "")
-                                    val splitList: List<String> = trimItem.split(",")
+                                IconButton(
+                                    onClick = {
+                                        val trimItem: String = item.map.replace(" ", "")
+                                        val splitList: List<String> = trimItem.split(",")
 
-                                    val latitude: String = splitList[0]
-                                    val longitude: String = splitList[1]
+                                        val latitude: String = splitList[0]
+                                        val longitude: String = splitList[1]
 
-                                    val uri = Uri.parse("geo:$latitude,$longitude?q=$latitude,$longitude")
-                                    val intent = Intent(Intent.ACTION_VIEW, uri)
-                                    intent.setPackage("com.google.android.apps.maps")
+                                        val uri =
+                                            Uri.parse("geo:$latitude,$longitude?q=$latitude,$longitude")
+                                        val intent = Intent(Intent.ACTION_VIEW, uri)
+                                        intent.setPackage("com.google.android.apps.maps")
 
-                                    startActivity(intent)
+                                        startActivity(intent)
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Filled.LocationOn,
+                                        contentDescription = "Delete"
+                                    )
                                 }
-                            ) {
-                                Icon(
-                                    Icons.Filled.LocationOn,
-                                    contentDescription = "Delete"
-                                )
                             }
                         }
                     }
                 }
             }
         }
+    }
 
-//        Box(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(32.dp),
-//            contentAlignment = Alignment.BottomEnd
-//        ) {
-//            FloatingActionButton(
-//                onClick = {},
-//                containerColor = MaterialTheme.colorScheme.background
-//            ) {
-//                Icon(
-//                    imageVector = Icons.Filled.Favorite,
-//                    contentDescription = "お気に入りを追加"
-//                )
-//            }
-//        }
+    private fun setLocale(localeName: String) {
+        val locale = Locale(localeName)
+        Locale.setDefault(locale)
+        val config = resources.configuration
+        config.setLocale(locale)
+        resources.updateConfiguration(config, resources.displayMetrics)
     }
 }

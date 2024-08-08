@@ -1,6 +1,5 @@
 package com.plasmavan.geocue
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
@@ -11,21 +10,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
 import com.plasmavan.geocue.ui.theme.GeocueTheme
-import java.util.*
+import java.util.Locale
 
 class SettingsActivity : ComponentActivity() {
-
-    private val PREFS_NAME = "AppSettings"
-    private val PREFS_KEY_LANGUAGE = "selected_language"
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -53,11 +49,9 @@ class SettingsActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun SettingsActivityUI() {
-        val context = LocalContext.current
-        val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val savedLanguage = sharedPreferences.getString(PREFS_KEY_LANGUAGE, Locale.getDefault().language)
-        val defaultLanguage = Locale.getDefault().language
-        var selectedLanguage by remember { mutableStateOf(savedLanguage ?: defaultLanguage) }
+        var languageState by remember { mutableStateOf(true) }
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val language = prefs.getString("app_language", "en") ?: "en"
 
         Column {
             Box(
@@ -72,7 +66,7 @@ class SettingsActivity : ComponentActivity() {
                     ),
                     title = {
                         Text(
-                            text = "Settings"
+                            text = getString(R.string.app_name)
                         )
                     },
                     navigationIcon = {
@@ -94,67 +88,74 @@ class SettingsActivity : ComponentActivity() {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp),
-                contentAlignment = Alignment.TopStart
+                contentAlignment = Alignment.TopCenter
             ) {
                 Column {
-                    Text(
-                        text = getString(R.string.language_selection),
-                        textAlign = TextAlign.Start,
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp)
-                    )
-
-                    Column(
-                        modifier = Modifier
-                            .selectableGroup()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.TopStart
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                        ) {
-                            RadioButton(
-                                selected = selectedLanguage == Locale.JAPANESE.language,
-                                onClick = {
-                                    selectedLanguage = Locale.JAPANESE.language
-                                    saveLanguagePreference(Locale.JAPANESE.language, context)
-                                    restartApp(context)
-                                },
-                                modifier = Modifier
-                                    .padding(end = 8.dp)
-                            )
-                            Text(
-                                text = getString(R.string.japanese),
-                                textAlign = TextAlign.Start,
-                                modifier = Modifier
-                                    .weight(1f)
-                            )
-                        }
+                        Text(
+                            text = getString(R.string.language_selection),
+                            textAlign = TextAlign.Start
+                        )
+                    }
 
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.TopStart
+                    ) {
+                        Column(
+                            Modifier.selectableGroup()
                         ) {
-                            RadioButton(
-                                selected = selectedLanguage == Locale.ENGLISH.language,
-                                onClick = {
-                                    selectedLanguage = Locale.ENGLISH.language
-                                    saveLanguagePreference(Locale.ENGLISH.language, context)
-                                    restartApp(context)
-                                },
+                            Row(
+                                Modifier
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = language == "ja",
+                                    onClick = {
+                                        Toast
+                                            .makeText(applicationContext, "アプリ内の表示言語が日本語に変更されました。", Toast.LENGTH_LONG)
+                                            .show()
+                                        setLocale("ja")
+                                    }
+                                )
+                                Text(
+                                    text = getString(R.string.japanese),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.padding(start = 16.dp)
+                                )
+                            }
+                            Spacer(
                                 modifier = Modifier
-                                    .padding(end = 8.dp)
+                                    .padding(8.dp)
                             )
-                            Text(
-                                text = getString(R.string.english),
-                                textAlign = TextAlign.Start,
-                                modifier = Modifier
-                                    .weight(1f)
-                            )
+                            Row(
+                                Modifier
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = language == "en",
+                                    onClick = {
+                                        Toast
+                                            .makeText(applicationContext, "The display language in the application has been changed to English.", Toast.LENGTH_LONG)
+                                            .show()
+                                        setLocale("en")
+                                    }
+                                )
+                                Text(
+                                    text = getString(R.string.english),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.padding(start = 16.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -162,23 +163,22 @@ class SettingsActivity : ComponentActivity() {
         }
     }
 
-    private fun saveLanguagePreference(language: String, context: Context) {
-        val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        with(sharedPreferences.edit()) {
-            putString(PREFS_KEY_LANGUAGE, language)
-            apply()
-        }
-    }
+    private fun setLocale(localeName: String) {
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        prefs.edit().putString("app_language", localeName).apply()
 
-    private fun restartApp(context: Context) {
-        Toast.makeText(context, getString(R.string.changed_language), Toast.LENGTH_LONG)
-            .show()
+        val locale = Locale(localeName)
+        Locale.setDefault(locale)
+        val config = resources.configuration
+        config.setLocale(locale)
+        resources.updateConfiguration(config, resources.displayMetrics)
 
-        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-        intent?.let {
-            it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            context.startActivity(it)
-            (context as? ComponentActivity)?.finish()
-        }
+        val intent: Intent = Intent(this@SettingsActivity, MainActivity::class.java)
+        intent.setFlags(
+            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK or
+                    Intent.FLAG_ACTIVITY_NEW_TASK
+        )
+        startActivity(intent)
     }
 }

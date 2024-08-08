@@ -55,6 +55,7 @@ class WebViewActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("SetJavaScriptEnabled")
     @Composable
     private fun WebViewUI(url: String, name: String) {
@@ -67,67 +68,42 @@ class WebViewActivity : ComponentActivity() {
                     .fillMaxWidth(),
                 contentAlignment = Alignment.TopCenter
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Card(
-                        modifier = Modifier
-                            .weight(1f),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        ),
-
-                        // This API is NOT recommended to use.
-                        onClick = {
-                            webView?.loadUrl(url)
-                        }
-                    ) {
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                    title = {
                         Text(
-                            modifier = Modifier
-                                .padding(16.dp),
                             text = name,
-                            textAlign = TextAlign.Center
+                            style = MaterialTheme.typography.bodyMedium,
                         )
-                    }
-                    Spacer(
-                        modifier = Modifier
-                            .width(16.dp)
-                    )
-                    IconButton(
-                        onClick = {
-                            webView?.goBack()
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = {
+                                webView?.reload()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Refresh,
+                                contentDescription = null
+                            )
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                            contentDescription = null
-                        )
-                    }
-                    IconButton(
-                        onClick = {
-                            webView?.goForward()
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                finish()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                contentDescription = null
+                            )
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = null
-                        )
                     }
-                    IconButton(
-                        onClick = {
-                            webView?.reload()
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Refresh,
-                            contentDescription = null
-                        )
-                    }
-                }
+                )
             }
 
             Box(
@@ -137,17 +113,34 @@ class WebViewActivity : ComponentActivity() {
                 contentAlignment = Alignment.Center
             ) {
                 if (isLoading) {
+                    webView?.visibility = View.INVISIBLE
+                    
                     Box(
                         modifier = Modifier
-                            .fillMaxSize(),
+                            .fillMaxSize()
+                            .padding(16.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        webView?.visibility = View.INVISIBLE
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .size(60.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Column {
+                            Text(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
+                                text = getString(R.string.loading_now),
+                                textAlign = TextAlign.Center
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier,
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                )
+                            }
+                        }
                     }
                 }
 
